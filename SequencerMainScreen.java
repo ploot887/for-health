@@ -1,6 +1,7 @@
 package seq.sequencermod.client.ui;
 
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
+import seq.sequencermod.client.preview.ManualAECPreviewRenderer;
 import seq.sequencermod.client.preview.CloudPreset;
 import net.minecraft.client.render.entity.EntityRenderer; // можно удалить, если не используете напрямую
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -2069,7 +2070,22 @@ public class SequencerMainScreen extends Screen {
 
                 PreviewDebug.inMainPreview(true);
                 try {
-                    if (toRenderAny instanceof LivingEntity le) {
+                    if (toRenderAny instanceof net.minecraft.entity.AreaEffectCloudEntity cloud) {
+                        // НЕ переопределяем areaW/areaH, чтобы не ловить "already defined"
+                        int pw = Math.max(0, morphPrevRight - morphPrevLeft);
+                        int ph = Math.max(0, morphPrevBottom - morphPrevTop);
+
+                        currentPreset.applyToEntity(cloud, custom);
+                        // OFFSCREEN → BLIT строго в прямоугольник превью
+                        seq.sequencermod.client.preview.ManualAECPreviewRenderer.renderOffscreenAndBlit(
+                                ctx,
+                                morphPrevLeft, morphPrevTop, pw, ph,
+                                cloud,
+                                mc.getTickDelta(),
+                                currentPreset.previewStyle(custom)
+                        );
+
+                    } else if (toRenderAny instanceof LivingEntity le) {
                         InventoryScreen.drawEntity(ctx, pX, pY, scale, rotDX, rotDY, le);
                     } else {
                         drawEntityAny(ctx, pX, pY, scale, rotDX, rotDY, toRenderAny);
